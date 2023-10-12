@@ -1,0 +1,42 @@
+version: '3.6'
+
+services:
+  # !! WARNING: !!
+  # If using linuxserver/mariadb, you will need to add
+  # skip-log-bin to mysqld and disable all log_bin options
+  db:
+    image: mariadb
+    restart: always
+    networks:
+      - brit
+    volumes:
+      - ./brit/db:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=brit
+    env_file:
+      - ./.env
+
+  brit:
+    image: ghcr.io/zoneminder-containers/zoneminder-base:latest
+    restart: always
+    stop_grace_period: 45s
+    depends_on:
+      - db
+    ports:
+      - 80:80
+    networks:
+      - brit
+    volumes:
+      - ./brit/data:/data
+      - ./brit/config:/config
+      - ./brit/log:/log
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+          size: 1000000000
+    env_file:
+      - ./.env
+
+
+networks:
+  brit:
